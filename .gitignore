@@ -1,0 +1,4 @@
+/build
+/googletest
+/.cache
+*.swp
