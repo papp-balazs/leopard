@@ -18,7 +18,7 @@ TEST(UriTests, ParseFromStringURL)
 	);
 }
 
-TEST(UriTests, ParseFromStringURNDeafultPathDelimiter)
+TEST(UriTests, ParseFromStringURN_DefaultPathDelimeter)
 {
 	Uri::Uri uri;
 
@@ -54,4 +54,68 @@ TEST(UriTests, ParseFromStringPathCornerCases)
 		ASSERT_TRUE(uri.ParseFromString(testVector.pathIn));
 		ASSERT_EQ(testVector.pathOut, uri.GetPath());
 	}
+}
+
+TEST(UriTests, ParseFromStringHasAPortNumber)
+{
+	Uri::Uri uri;
+
+	ASSERT_TRUE(uri.ParseFromString("http://www.example.com:8080/foo/bar"));
+	ASSERT_EQ("www.example.com", uri.GetHost());
+	ASSERT_TRUE(uri.HasPort());
+	ASSERT_EQ(8080, uri.GetPort());
+}
+
+TEST(UriTests, ParseFromStringDoesNotHaveAPortNumber)
+{
+	Uri::Uri uri;
+
+	ASSERT_TRUE(uri.ParseFromString("http://www.example.com/foo/bar"));
+	ASSERT_EQ("www.example.com", uri.GetHost());
+	ASSERT_FALSE(uri.HasPort());
+}
+
+TEST(UriTests, ParseFromStringTwiceFirstWithPortNumberThenWithout)
+{
+	Uri::Uri uri;
+
+	ASSERT_TRUE(uri.ParseFromString("http://www.example.com:8080/foo/bar"));
+	ASSERT_TRUE(uri.ParseFromString("http://www.example.com/foo/bar"));
+	ASSERT_FALSE(uri.HasPort());
+}
+
+TEST(UriTests, ParseFromStringBadPortNumberPurelyAlphabetic)
+{
+	Uri::Uri uri;
+
+	ASSERT_FALSE(uri.ParseFromString("http://www.example.com:spam/foo/bar"));
+}
+
+TEST(UriTests, ParseFromStringBadPortNumberStartsNumericEndAlphabetic)
+{
+	Uri::Uri uri;
+
+	ASSERT_FALSE(uri.ParseFromString("http://www.example.com:8080spa/foo/bar"));
+}
+
+TEST(UriTests, ParseFromStringLargestValidPortNumber)
+{
+	Uri::Uri uri;
+
+	ASSERT_TRUE(uri.ParseFromString("http://www.example.com:65535/foo/bar"));
+	ASSERT_EQ(65535, uri.GetPort());
+}
+
+TEST(UriTests, ParseFromStringBadPortNumberTooLong)
+{
+	Uri::Uri uri;
+
+	ASSERT_FALSE(uri.ParseFromString("http://www.example.com:65536/foo/bar"));
+}
+
+TEST(UriTests, ParseFromStringBadPortNumberNegative)
+{
+	Uri::Uri uri;
+
+	ASSERT_FALSE(uri.ParseFromString("http://www.example.com:-1111/foo/bar"));
 }

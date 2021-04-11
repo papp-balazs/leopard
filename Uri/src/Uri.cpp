@@ -1,8 +1,8 @@
 #include <Uri/Uri.hpp>
-#include <string>
-#include <vector>
+#include <inttypes.h>
 
 namespace Uri {
+
 	/**
 	 * This contains the private properties of a Uri instance.
 	 */
@@ -18,9 +18,20 @@ namespace Uri {
 		std::string host;
 
 		/**
+		 * This flag indicates whether or not the URI has a port number.
+		 */
+		bool hasPort = false;
+
+		/**
+		 * This is the "port" element of the URI.
+		 */
+		uint16_t port = 0;
+
+		/**
 		 * This is the "path" element of the URI as a sequence of segments.
 		 */
 		std::vector< std::string > path;
+
 	};
 
 	Uri::~Uri() = default;
@@ -37,10 +48,42 @@ namespace Uri {
 		auto rest = uriString.substr(schemeEnd + 1);
 
 		// Next, parse the host.
+		impl_->hasPort = false;
+
 		if (rest.substr(0, 2) == "//")
 		{
 			const auto authorityEnd = rest.find('/', 2);
-			impl_->host = rest.substr(2, authorityEnd - 2);
+			const auto portDelimiter = rest.find(':');
+
+			if (portDelimiter == std::string::npos)
+			{
+				impl_->host = rest.substr(2, authorityEnd - 2);
+			}
+			else
+			{
+				impl_->host = rest.substr(2, portDelimiter - 2);
+				uint32_t newPort = 0;
+
+				for (auto c: rest.substr(portDelimiter + 1, authorityEnd - portDelimiter - 1))
+				{
+					if ((c < '0') || (c > '9'))
+					{
+						return false;
+					}
+
+					newPort *= 10;
+					newPort += (uint16_t)(c - '0');
+
+					if ((newPort & ~((1 << 16) - 1)) != 0)
+					{
+						return false;
+					}
+				}
+
+				impl_->hasPort = true;
+				impl_->port = (uint16_t)newPort;
+			}
+
 			rest = rest.substr(authorityEnd);
 		}
 		else
@@ -93,8 +136,19 @@ namespace Uri {
 		return impl_->host;
 	}
 
+	bool Uri::HasPort() const
+	{
+		return impl_->hasPort;
+	}
+
+	uint16_t Uri::GetPort() const
+	{
+		return impl_->port;
+	}
+
 	std::vector< std::string > Uri::GetPath() const
 	{
 		return impl_->path;
 	}
+
 }

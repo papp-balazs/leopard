@@ -2,6 +2,7 @@
 #define URI_HPP
 
 #include <memory>
+#include <stdint.h>
 #include <string>
 #include <vector>
 
@@ -61,6 +62,29 @@ namespace Uri {
 		 * 		This is returned if there is no "host" element in the URI.
 		 */
 		std::string GetHost() const;
+
+		/**
+		 * This method returns an indication whether or not the URI includes a
+		 * port number.
+		 *
+		 * @return
+		 * 		An indication of whether or not the URI includes a port number
+		 * 		is returned.
+		 */
+		bool HasPort() const;
+
+		/**
+		 * This method returns the "port" number element of the URI, if it has
+		 * one.
+		 *
+		 * @return
+		 * 		The "port" element of the URI is returned.
+		 *
+		 * @note
+		 * 		The returned port is only valid if the HasPort method returns
+		 * 		true.
+		 */
+		uint16_t GetPort() const;
 
 		/**
 		 * This method returns the "path" element of the URI as a sequence of
