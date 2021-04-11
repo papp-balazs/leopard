@@ -8,12 +8,6 @@ namespace Uri {
 	 */
 	struct Uri::Impl {
 		/**
-		 * This is the charcter or character sequence that sould be interpreted
-		 * as a path delimeter.
-		 */
-		std::string pathDelimeter = "/";
-
-		/**
 		 * This is the "scheme" element of the URI.
 		 */
 		std::string scheme;
@@ -24,7 +18,7 @@ namespace Uri {
 		std::string host;
 
 		/**
-		 * This is the "path" element of the URI as a sequence of steps.
+		 * This is the "path" element of the URI as a sequence of segments.
 		 */
 		std::vector< std::string > path;
 	};
@@ -34,11 +28,6 @@ namespace Uri {
 	Uri::Uri()
 		: impl_(new Impl)
 	{}
-
-	void Uri::SetPathDelimiter(const std::string& newPathDelimiter)
-	{
-		impl_->pathDelimeter = newPathDelimiter;
-	}
 
 	bool Uri::ParseFromString(const std::string& uriString)
 	{
@@ -50,7 +39,7 @@ namespace Uri {
 		// Next, parse the host.
 		if (rest.substr(0, 2) == "//")
 		{
-			const auto authorityEnd = rest.find(impl_->pathDelimeter, 2);
+			const auto authorityEnd = rest.find('/', 2);
 			impl_->host = rest.substr(2, authorityEnd - 2);
 			rest = rest.substr(authorityEnd);
 		}
@@ -62,7 +51,7 @@ namespace Uri {
 		// Finally, parse the path.
 		impl_->path.clear();
 
-		if (rest == impl_->pathDelimeter)
+		if (rest == "/")
 		{
 			// Special case of a path that is empty but needs a single
 			// empty-string element to indiciate that is is absolute.
@@ -72,7 +61,7 @@ namespace Uri {
 		{
 			for (;;)
 			{
-				auto pathDelimeter = rest.find(impl_->pathDelimeter);
+				auto pathDelimeter = rest.find('/');
 
 				if (pathDelimeter == std::string::npos)
 				{
@@ -86,9 +75,7 @@ namespace Uri {
 						rest.begin() + pathDelimeter
 					);
 
-					rest = rest.substr(
-						pathDelimeter + impl_->pathDelimeter.length()
-					);
+					rest = rest.substr(pathDelimeter + 1);
 				}
 			}
 		}
